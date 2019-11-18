@@ -248,10 +248,12 @@ public:
     {
         switch(level)
         {
-            case 0:  return "3";
-            case 1:  return "2";
-            case 2:  return "1";
             default: return  "-";
+
+            // 1 based level string for user facing visualisations
+            case 0:  return "1";
+            case 1:  return "2";
+            case 2:  return "3";
         }
     }
 
