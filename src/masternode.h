@@ -112,7 +112,7 @@ struct masternode_info_t
     int nProtocolVersion = 0;
     int64_t sigTime = 0; //mnb message time
 
-    CTxIn vin{};
+    CTxIn vin{}; 
     CService addr{};
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
@@ -242,6 +242,12 @@ public:
                 nActiveStateIn == MASTERNODE_PRE_ENABLED ||
                 nActiveStateIn == MASTERNODE_EXPIRED ||
                 nActiveStateIn == MASTERNODE_WATCHDOG_EXPIRED;
+    }
+
+    static std::string GetMNLevelStr(int level)
+    {
+        // 1 based level string for user facing visualisations
+        return (level < 0) ? "-" : std::to_string(level + 1);
     }
 
     bool IsValidForPayment() const;

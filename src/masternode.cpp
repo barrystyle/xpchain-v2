@@ -951,19 +951,21 @@ CAmount CMasternode::CheckOutPointValue(const COutPoint& outpoint)
 
 int CMasternode::RetrieveMNType()
 {
-    int mnType = 0;
     CAmount nOutPointValue = CheckOutPointValue(vin.prevout);
     for(int i=0; i<Params().CollateralLevels(); i++) {
-        if((nOutPointValue * COIN) == (Params().ValidCollateralAmounts()[i] * COIN)) {
+        if(nOutPointValue == (Params().ValidCollateralAmounts()[i] * COIN)) {
            LogPrintf("RetrieveMNType() - masternode.cpp L958\n");
            LogPrintf("nOutPointValue == %llu\n", nOutPointValue);
            LogPrintf("Collat         == %llu\n", Params().ValidCollateralAmounts()[i]);
-           LogPrintf("mnType         == %d\n", mnType);
-           return mnType;
-	}
+           LogPrintf("mnType         == %d\n", i);
+           
+           // 0: small, 1: medium, 2: large
+           return i; 
+	    }
     }
-    LogPrintf("Exiting RetrieveMNType() via fallthrough... (! mnType %d)\n", mnType);
-    return(Params().CollateralLevels());
+
+    LogPrintf("Exiting RetrieveMNType() via fallthrough...");
+    return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
