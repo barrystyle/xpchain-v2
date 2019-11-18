@@ -246,15 +246,8 @@ public:
 
     static std::string GetMNLevelStr(int level)
     {
-        switch(level)
-        {
-            default: return  "-";
-
-            // 1 based level string for user facing visualisations
-            case 0:  return "1";
-            case 1:  return "2";
-            case 2:  return "3";
-        }
+        // 1 based level string for user facing visualisations
+        return (level < 0) ? "-" : std::to_string(level + 1);
     }
 
     bool IsValidForPayment() const;
