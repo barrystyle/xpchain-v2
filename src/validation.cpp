@@ -2355,14 +2355,14 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
-            if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                const std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
-                if (state == ThresholdState::ACTIVE) {
-                    DoWarning(strWarning);
-                } else {
-                    warningMessages.push_back(strWarning);
-                }
-            }
+//          if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
+//              const std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
+//              if (state == ThresholdState::ACTIVE) {
+//                  DoWarning(strWarning);
+//              } else {
+//                  warningMessages.push_back(strWarning);
+//              }
+//          }
         }
         // Check the version of the last 100 blocks to see if we need to upgrade:
         for (int i = 0; i < 100 && pindex != nullptr; i++)
@@ -2372,14 +2372,14 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
-        if (nUpgraded > 0)
-            warningMessages.push_back(strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
-        if (nUpgraded > 100/2)
-        {
-            std::string strWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
-            // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            DoWarning(strWarning);
-        }
+//      if (nUpgraded > 0)
+//          warningMessages.push_back(strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
+//      if (nUpgraded > 100/2)
+//      {
+//          std::string strWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
+//          // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
+//          DoWarning(strWarning);
+//      }
     }
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__, /* Continued */
               pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
@@ -3280,7 +3280,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
     if (block.IsProofOfStake()) {
-
         // Second transaction must be coinstake, the rest must not be
         if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
             return state.DoS(100, error("CheckBlock() : second tx is not coinstake"));
@@ -3290,18 +3289,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     }
 
     // Check transactions
-    for (const auto& tx : block.vtx) {
-        if (!CheckTransaction(*tx, state, true)) {
-            doublespend++;
-	    LogPrintf("doublespend detected #%d - tx input %s \n", doublespend, tx->GetHash().ToString());
+    if (IsLegacyModeComplete()) {
+        for (const auto& tx : block.vtx) {
+            if (!CheckTransaction(*tx, state, true)) {
+                return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
+                                     strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
+            }
         }
     }
 
-
-#if 0
-            return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
-                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
-#endif
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
     {
@@ -5125,6 +5121,17 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
     }
 
     return pindex->nChainTx / fTxTotal;
+}
+
+//! determines whether we are operating in original or xpchainv2 mode
+bool IsLegacyModeComplete()
+{
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET)
+        return true;
+    if (chainActive.Height() >= consensusParams.nAbPOS2Height)
+        return true;
 }
 
 class CMainCleanup

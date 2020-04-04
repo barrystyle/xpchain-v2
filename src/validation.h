@@ -498,4 +498,7 @@ bool DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
+//! determines whether we are operating in original or xpchainv2 mode
+bool IsLegacyModeComplete();
+
 #endif // BITCOIN_VALIDATION_H
