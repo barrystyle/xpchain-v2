@@ -75,7 +75,7 @@ public:
         strNetworkID = "main";
 
         consensus.nFirstPoSBlock = 100;
-        consensus.nAbPOS2Height = 0;
+        consensus.nabposHeight = 750000;       //! note TBD; this is just set for tests
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 16616;
@@ -203,7 +203,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nFirstPoSBlock = 75;
-        consensus.nAbPOS2Height  = consensus.nFirstPoSBlock;
+        consensus.nabposHeight = consensus.nFirstPoSBlock;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 16616;

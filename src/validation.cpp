@@ -44,7 +44,7 @@
 #include <kernel.h>
 #include <masternode-payments.h>
 #include <blocksigner.h>
-#include <abpos2.h>
+#include <abpos.h>
 
 #include <future>
 #include <sstream>
@@ -2060,10 +2060,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Unfortunately the height requirement is needed as testnet originally launched with a different reward schema in place
-
-    if (block.IsProofOfStake() && pindex->nHeight > 1500)
+    //! verify abpos rewards
+    if (pindex->nHeight >= chainparams.GetConsensus().abposStartHeight())
     {
        const auto& tx = block.vtx[1];
        const auto& txin = tx->vin[0].prevout.hash;
@@ -5130,7 +5128,7 @@ bool IsLegacyModeComplete()
 
     if (Params().NetworkIDString() == CBaseChainParams::TESTNET)
         return true;
-    if (chainActive.Height() >= consensusParams.nAbPOS2Height)
+    if (chainActive.Height() >= consensusParams.nabposHeight)
         return true;
 }
 

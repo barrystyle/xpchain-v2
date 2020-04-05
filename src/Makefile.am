@@ -90,7 +90,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # xpchain core #
 BITCOIN_CORE_H = \
-  abpos2.h \
+  abpos.h \
   activemasternode.h \
   addrdb.h \
   addrman.h \
@@ -240,7 +240,7 @@ libxpchain_util_a-clientversion.$(OBJEXT): obj/build.h
 libxpchain_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libxpchain_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libxpchain_server_a_SOURCES = \
-  abpos2.cpp \
+  abpos.cpp \
   activemasternode.cpp \
   addrdb.cpp \
   addrman.cpp \
