@@ -18,6 +18,7 @@
 #include <hash.h>
 #include <index/txindex.h>
 #include <init.h>
+#include <legacypos.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -2060,15 +2061,82 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
 
-    //! verify abpos rewards
-    if (pindex->nHeight >= chainparams.GetConsensus().abposStartHeight())
+    ///////////////////////////////////////////////////////////////////// legacy pos validation 
+    if (pindex->nHeight > chainparams.GetConsensus().legacyHeight &&
+        pindex->nHeight < chainparams.GetConsensus().abposHeight)
     {
-       const auto& tx = block.vtx[1];
-       const auto& txin = tx->vin[0].prevout.hash;
+        uint256 hash;
+        CTransactionRef tx;
 
+        if(block.vtx.size() < 2 || !IsCoinStakeTx(block.vtx[1], chainparams.GetConsensus(), hash, tx)){
+            return state.DoS(100, false, REJECT_INVALID, "bad-cs");
+        }
+
+        auto itr = mapBlockIndex.find(hash);
+
+        if(itr == mapBlockIndex.end())
+        {
+            return state.DoS(100, error("%s: unknown block that contains previous tx of coinstake input", __func__), REJECT_INVALID, "no-prev-blk");
+        }
+
+        if(hash != (*itr).second->GetBlockHash())
+        {
+            return state.DoS(100, error("%s: invalid hash of block containing previous tx of coinstake input", __func__), REJECT_INVALID, "bad-prev-blk");
+        }
+
+        CBlockHeader header = (*itr).second->GetBlockHeader();
+
+        uint32_t nTime = block.nTime - header.nTime;
+
+        CAmount blockReward = GetProofOfStakeRewardLegacy(pindex->nHeight, tx->vout[block.vtx[1]->vin[0].prevout.n].nValue, nTime);
+        if (block.vtx[0]->vout.size() >= 3) {
+            if (!VerifyCoinBaseTx(block, state)) {
+                return false;
+            }
+        }
+        if (1 <= block.vtx[0]->vout.size() && block.vtx[0]->vout.size() <= 2) {
+            if (block.vtx[0]->vout[0].nValue < blockReward) {
+                return state.DoS(100,
+                                 error("%s: coinbase pays too little (actual=%d vs calculated=%d)",
+                                       __func__, block.vtx[0]->vout[0].nValue, blockReward),
+                                 REJECT_INVALID, "bad-cb-amount");
+            }
+        }
+
+        if (block.vtx[0]->GetValueOut() > blockReward)
+            return state.DoS(100,
+                         error("%s: coinbase pays too much (actual=%d vs limit=%d)",
+                               __func__, block.vtx[0]->GetValueOut(), blockReward),
+                               REJECT_INVALID, "bad-cb-amount");
+    }
+
+    ///////////////////////////////////////////////////////////////////// abpos pos validation
+    if (pindex->nHeight >= chainparams.GetConsensus().abposHeight)
+    {
+       CTransactionRef nStakeInput;
+       const auto& tx = block.vtx[1];
+       const auto& txHash = tx->vin[0].prevout.hash;
        CAmount totalCreated = nValueOut - nValueIn;
-       int64_t nCoinAge = GetStakeInputAge(txin, block.nTime);
-       CAmount nCoinStakeReward = GetProofOfStakeReward(nCoinAge);
+
+       //! retrieve age
+       auto nInputAge = GetLastHeight(txHash);
+       if (!nInputAge)
+           return error("%s : stakeInput age violation (stake: %s, input %s)",
+                        __func__, tx->GetHash().ToString(), txHash.ToString().c_str());
+       int64_t nCoinAge = pindex->nHeight - nInputAge;
+
+       //! retrieve value
+       uint256 blockHash = uint256();
+       if (!GetTransaction(txHash, nStakeInput, chainparams.GetConsensus(), blockHash, true))
+           return error("%s : couldn't fetch stakeInput value (stake: %s, input %s)",
+                        __func__, tx->GetHash().ToString(), txHash.ToString().c_str());
+       CAmount nInputValue = nStakeInput->vout[0].nValue;
+       CAmount nCoinStakeReward = GetStakeReward(nInputValue, nCoinAge);
+
+       if (nCoinStakeReward + nInputValue > totalCreated)
+           LogPrintf("error\n");
+       else
+           LogPrintf("cool\n");
 
        // basic sanity checks
        int stakeOutputs = tx->vout.size();
@@ -2102,7 +2170,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
        }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // ppcoin: track money supply and mint amount info
     CAmount nMoneySupplyPrev = pindex->pprev ? pindex->pprev->nMoneySupply : 0;
@@ -3287,13 +3355,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     }
 
     // Check transactions
-    if (IsLegacyModeComplete()) {
-        for (const auto& tx : block.vtx) {
-            if (!CheckTransaction(*tx, state, true)) {
-                return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
-                                     strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
-            }
-        }
+    for (const auto& tx : block.vtx) {
+         if (!CheckTransaction(*tx, state, true)) {
+             if (!knownAbuseOfInputBug(tx->GetHash()))
+                 return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
+                                      strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
+         }
     }
 
     unsigned int nSigOps = 0;
@@ -5128,7 +5195,7 @@ bool IsLegacyModeComplete()
 
     if (Params().NetworkIDString() == CBaseChainParams::TESTNET)
         return true;
-    if (chainActive.Height() >= consensusParams.nabposHeight)
+    if (chainActive.Height() >= consensusParams.abposHeight)
         return true;
 }
 

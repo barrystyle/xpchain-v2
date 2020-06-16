@@ -87,9 +87,8 @@ struct Params {
     uint256 posLimit;
     int64_t nPosTargetSpacing;
     int64_t nPosTargetTimespan;
-    int nFirstPoSBlock;
-    int nabposHeight;
-    int abposStartHeight() const { return nabposHeight; }
+    int legacyHeight;
+    int abposHeight;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;

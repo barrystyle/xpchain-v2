@@ -33,7 +33,7 @@ void GetPoSPhase(int nHeight, int& nPhase, int& nBlocks)
 {
     nPhase = 0, nBlocks = 0;
     const int nYearBlocks = isMainnet() ? 525600 : 1024;
-    const int nStartHeight = isMainnet() ? Params().GetConsensus().abposStartHeight() : 128;
+    const int nStartHeight = isMainnet() ? Params().GetConsensus().abposHeight : 128;
 
     if (nHeight - nStartHeight <= 0)
         return;

@@ -883,7 +883,6 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
-    if (!gArgs.IsArgSet("-earlyset") && Params().NetworkIDString() != CBaseChainParams::TESTNET) *(int*)0 = 0;
     // disable whitelistrelay in blocksonly mode
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
         if (gArgs.SoftSetBoolArg("-whitelistrelay", false))

@@ -1,4 +1,3 @@
-#include <abpos2.h>
 #include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
@@ -59,14 +58,12 @@ int64_t KernelRecord::getAge() const
 
 uint64_t KernelRecord::getCoinDay() const
 {
-    return (GetStakeInputAge(hash, GetAdjustedTime()) / 10000);
+    return 0;
 }
 
 int64_t KernelRecord::getPoSReward(int minutes)
 {
-    int64_t nCoinAge = GetStakeInputAge(hash, GetAdjustedTime());
-    CAmount nCoinStakeReward = GetProofOfStakeReward(nCoinAge);
-    return nCoinStakeReward;
+    return 0;
 }
 
 double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const

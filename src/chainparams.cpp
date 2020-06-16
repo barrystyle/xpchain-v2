@@ -74,8 +74,10 @@ public:
     CMainParams() {
         strNetworkID = "main";
 
-        consensus.nFirstPoSBlock = 100;
-        consensus.nabposHeight = 750000;       //! note TBD; this is just set for tests
+        //! beginning block for each pos system
+        consensus.legacyHeight = 10275;
+        consensus.abposHeight = 810000;
+
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 16616;
@@ -202,8 +204,10 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nFirstPoSBlock = 75;
-        consensus.nabposHeight = consensus.nFirstPoSBlock;
+
+        //! beginning block for each pos system
+        consensus.legacyHeight = 125;
+        consensus.abposHeight = 125;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = 0;
         consensus.nBudgetPaymentsCycleBlocks = 16616;

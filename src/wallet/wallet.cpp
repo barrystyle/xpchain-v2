@@ -5,7 +5,7 @@
 
 #include <wallet/wallet.h>
 
-#include <abpos2.h>
+#include <abpos.h>
 #include <checkpoints.h>
 #include <chain.h>
 #include <wallet/coincontrol.h>
@@ -3316,9 +3316,9 @@ void CWallet::FillCoinStakePayments(CMutableTransaction &transaction, const CScr
 {
     const CWalletTx *walletTx = GetWalletTx(stakePrevout.hash);
     CTxOut prevTxOut = walletTx->tx->vout[stakePrevout.n];
-    CAmount nCredit = abs(prevTxOut.nValue);
-    int64_t nCoinAge = GetStakeInputAge(stakePrevout.hash, 0);
-    CAmount nCoinStakeReward = nCredit + GetProofOfStakeReward(nCoinAge);
+    CAmount nInputValue = prevTxOut.nValue;
+    int64_t nCoinAge = chainActive.Height() - GetLastHeight(stakePrevout.hash);
+    CAmount nCoinStakeReward = GetStakeReward(nInputValue, nCoinAge);
 
     transaction.vin.emplace_back(CTxIn(stakePrevout));
     transaction.vout.emplace_back(nCoinStakeReward, scriptPubKeyOut);

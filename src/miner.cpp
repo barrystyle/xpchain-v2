@@ -192,7 +192,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CWallet *wallet, 
             return nullptr;
     }
     else {
-        if (nHeight <= Params().GetConsensus().nFirstPoSBlock) {
+
+        //! this check is referring to the first block using the
+        //! new staking consensus mechanism (abpos), not the old
+        if (nHeight < Params().GetConsensus().abposHeight) {
             coinbaseTx.vout[0].nValue = nFees + blockReward;
         }
     }
@@ -552,7 +555,7 @@ void static BitcoinMiner(const CChainParams& chainparams, CConnman& connman, CWa
 
             if(fProofOfStake)
             {
-                if (chainActive.Tip()->nHeight+1 < chainparams.GetConsensus().nFirstPoSBlock ||
+                if (chainActive.Tip()->nHeight+1 < chainparams.GetConsensus().abposHeight ||
                     pwallet->IsLocked() || !masternodeSync.IsSynced())
                 {
                     nLastCoinStakeSearchInterval = 0;

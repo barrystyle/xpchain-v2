@@ -145,6 +145,7 @@ BITCOIN_CORE_H = \
   kernel.h \
   kernelrecord.h \
   dbwrapper.h \
+  legacypos.h \
   limitedmap.h \
   logging.h \
   masternode.h \
@@ -265,6 +266,7 @@ libxpchain_server_a_SOURCES = \
   governance/governance-validators.cpp \
   governance/governance-vote.cpp \
   governance/governance-votedb.cpp \
+  legacypos.cpp \
   masternode.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
@@ -423,7 +425,7 @@ libxpchain_consensus_a_SOURCES = \
 libxpchain_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libxpchain_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libxpchain_common_a_SOURCES = \
-  abpos2.cpp \
+  abpos.cpp \
   base58.cpp \
   bech32.cpp \
   chainparams.cpp \
@@ -435,6 +437,7 @@ libxpchain_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
+  legacypos.cpp \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
